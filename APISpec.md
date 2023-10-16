@@ -104,7 +104,7 @@ Removes an exercise from a specific day in the diary. This would be removed from
 
 ## 3. Get Exercise Recommendations
 
-## 4. Get Previous Entry
+## 4. Get Previous Exercise Entry
 1. `Get Diary`
 2. `Get Exercise`
 
