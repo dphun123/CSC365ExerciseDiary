@@ -102,9 +102,32 @@ Removes an exercise from a specific day in the diary. This would be removed from
 
 ### 2.1. Delete Diary - `/diary/{diary_id}` (DELETE)
 
-
-
 ## 3. Get Exercise Recommendations
 
+## 4. Get Previous Entry
+1. `Get Diary`
+2. `Get Exercise`
 
+### 4.1. Get Diary - `/diary/{diary_id}` (GET)
 
+**Returns**:
+
+```json
+{
+    "days": "int[]",
+    "exercises": "string[]"
+}
+```
+
+### 4.2. Get Exersise - `/diary/{diary_id}/{exersise}` (GET)
+
+**Returns**:
+
+```json
+{
+    "exercise": "string",
+    "type": "string", /* as in the body part, later used for recommendations */
+    "goal_weight": "int",
+    "goal_reps": "int"
+}
+```
