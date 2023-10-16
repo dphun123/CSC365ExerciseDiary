@@ -110,7 +110,29 @@ Removes an exercise from a specific day in the diary. This would be removed from
 }
 ```
 
-## 3. Get Exercise Recommendations
+## 3. Get Exercise and Recommendations
+1. `Suggest Specific Type Excercise`
+
+### 3.1 Suggest Specific Type Excercise - `/diary/{diary_id}{exercises}` (GET)
+
+**Request**
+```json
+{
+    "type": "string"
+}
+```
+
+
+**Returns**:
+```Json
+{
+    "exercises": "string[]",
+    "weight": "int",
+    "reps": "int"
+}
+```
+
+
 
 ## 4. Get Previous Exercise Entry
 1. `Get Diary`
@@ -139,12 +161,3 @@ Removes an exercise from a specific day in the diary. This would be removed from
     "goal_reps": "int"
 }
 ```
-
-
-
-
-
-Deleting a Diary Example Flow 
-
-Al has a diary with ID 1098 and a user_id of AL10 and wants to delete his diary
-Al makes a call DELETE /diary/{1098}{AL10}  and his diary with ID 1098 is deleted
