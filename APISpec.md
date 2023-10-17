@@ -149,7 +149,7 @@ Removes an exercise from a specific day in the diary. This would be removed from
 }
 ```
 
-### 4.2. Get Diary - `/diary/{diary_id}/{days}` (GET)
+### 4.2. Get Diary - `/diary/{diary_id}/{day}` (GET)
 
 **Returns**:
 
@@ -159,7 +159,7 @@ Removes an exercise from a specific day in the diary. This would be removed from
 }
 ```
 
-### 4.3. Get Exersise - `/diary/{diary_id}/{days}/{exersise}` (GET)
+### 4.3. Get Exersise - `/diary/{diary_id}/{day}/{exersise}` (GET)
 
 **Returns**:
 
