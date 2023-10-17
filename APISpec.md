@@ -136,7 +136,8 @@ Removes an exercise from a specific day in the diary. This would be removed from
 
 ## 4. Get Previous Exercise Entry
 1. `Get Diary`
-2. `Get Exercise`
+2. `Get Day`
+3. `Get Exercise`
 
 ### 4.1. Get Diary - `/diary/{diary_id}` (GET)
 
@@ -145,11 +146,20 @@ Removes an exercise from a specific day in the diary. This would be removed from
 ```json
 {
     "days": "int[]",
+}
+```
+
+### 4.2. Get Diary - `/diary/{diary_id}/{days}` (GET)
+
+**Returns**:
+
+```json
+{
     "exercises": "string[]"
 }
 ```
 
-### 4.2. Get Exersise - `/diary/{diary_id}/{exersise}` (GET)
+### 4.3. Get Exersise - `/diary/{diary_id}/{days}/{exersise}` (GET)
 
 **Returns**:
 
