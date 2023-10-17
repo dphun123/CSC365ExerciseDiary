@@ -100,11 +100,74 @@ Removes an exercise from a specific day in the diary. This would be removed from
 ## 2. Diary Deletion
 1. `Delete Diary`
 
-### 2.1. Delete Diary - `/diary/{diary_id}` (DELETE)
+### 2.1. Delete Diary - `/diary/{diary_id}/{user_id}` (DELETE)
+
+**Returns**:
+
+```json
+{
+    "success": "boolean"
+}
+```
+
+## 3. Get Exercise and Recommendations
+1. `Suggest Specific Type Excercise`
+
+### 3.1 Suggest Specific Type Excercise - `/diary/{diary_id}{exercises}` (GET)
+
+**Request**
+```json
+{
+    "type": "string"
+}
+```
+
+
+**Returns**:
+```Json
+{
+    "exercises": "string[]",
+    "weight": "int",
+    "reps": "int"
+}
+```
 
 
 
-## 3. Get Exercise Recommendations
+## 4. Get Previous Exercise Entry
+1. `Get Diary`
+2. `Get Day`
+3. `Get Exercise`
 
+### 4.1. Get Diary - `/diary/{diary_id}` (GET)
 
+**Returns**:
 
+```json
+{
+    "days": "int[]",
+}
+```
+
+### 4.2. Get Diary - `/diary/{diary_id}/{day}` (GET)
+
+**Returns**:
+
+```json
+{
+    "exercises": "string[]"
+}
+```
+
+### 4.3. Get Exersise - `/diary/{diary_id}/{day}/{exersise}` (GET)
+
+**Returns**:
+
+```json
+{
+    "exercise": "string",
+    "type": "string", /* as in the body part, later used for recommendations */
+    "goal_weight": "int",
+    "goal_reps": "int"
+}
+```
