@@ -37,3 +37,13 @@ create table
     body_part text null,
     constraint Exercise_pkey primary key (id)
   ) tablespace pg_default;
+
+
+insert into
+  "Exercise" (name, description, body_part)
+values
+  (
+    'Bench Press',
+    'lying on a bench and pressing weight upward using either a barbell or a pair of dumbbells',
+    'Chest'
+  )
