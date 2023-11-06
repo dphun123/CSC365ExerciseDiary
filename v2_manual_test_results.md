@@ -9,7 +9,6 @@ Then it returns success since that is his diary_id
 
 ## Testing results
 
-1. 
 * curl -X 'DELETE' \
   'https://exercisediary.onrender.com/diary/11' \
   -H 'accept: application/json'
