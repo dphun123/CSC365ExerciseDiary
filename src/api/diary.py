@@ -72,3 +72,22 @@ def edit_entry(entry_id: int, entry: EditEntry):
         """), {"reps": entry.reps, "weight": entry.weight, "comments": entry.comments, "entry_id": entry_id})
   return "OK"
 
+# Get the exercise names for the day
+@router.get("/{diary_id}/{day}")
+def get_exercises_for_day(diary_id: int, day: str):
+  exercise_names = []
+  with db.engine.begin() as connection:
+    exercises = connection.execute(sqlalchemy.text("""
+        WITH get_day_id AS (
+          SELECT id
+          FROM day
+          WHERE diary_id = :diary_id AND day_name = :day
+        )
+        SELECT ex.name
+        FROM entry en
+        JOIN exercise ex ON en.exercise_id = ex.id
+        JOIN get_day_id gdi ON en.day_id = gdi.id
+        """), {"diary_id": diary_id, "day": day}).fetchall()
+    for row in exercises:
+      exercise_names.append(row.name)
+  return exercise_names
