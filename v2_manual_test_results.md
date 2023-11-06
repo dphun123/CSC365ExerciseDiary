@@ -4,7 +4,7 @@ Alvin is no longer going to the gym and wants to get rid of his exercise diary. 
 
 Alvin starts the process of deleting diary.
 
-Starts by calling DELETE /diary_id / user_id with diary_id is 1098 and user_id is alvin.
+Starts by calling DELETE /{diary_id}/{user_id} with diary_id is 1098 and user_id is alvin.
 Then it returns success since that is his user_id and diary_id
 
 ## Testing results (Needs Updating)
