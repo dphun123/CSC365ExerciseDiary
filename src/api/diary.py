@@ -91,3 +91,20 @@ def get_exercises_for_day(diary_id: int, day: str):
     for row in exercises:
       exercise_names.append(row.name)
   return exercise_names
+
+# Get goal values for exercise for day for diary
+@router.get("/{diary_id}/{day}/{exercise}")
+def get_exercise_goals(diary_id: int, day: str, exercise: str):
+  with db.engine.begin() as connection:
+    goal = connection.execute(sqlalchemy.text("""
+        WITH get_day_id AS (
+          SELECT id
+          FROM day
+          WHERE diary_id = :diary_id AND day_name = :day
+        )
+        SELECT en.goal_reps, en.goal_weight
+        FROM entry en
+        JOIN get_day_id gdi ON en.day_id = gdi.id
+        WHERE en.day_id = 25
+        """), {"diary_id": diary_id, "day": day, "exercise": exercise}).first()
+  return goal.goal_reps, goal.goal_weight
