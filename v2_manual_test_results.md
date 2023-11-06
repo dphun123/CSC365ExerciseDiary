@@ -1,46 +1,21 @@
 # Example workflow
 ## 2. Diary Deletion
-Alvin is no longer going to the gym and wants to get rid of his exercise diary. Alvin takes steroids now so he does not need to go to the gym. Alvin knows that his diary_id is 1098 and his user_id is alvin.
+Alvin is no longer going to the gym and wants to get rid of his exercise diary. Alvin takes steroids now so he does not need to go to the gym. Alvin knows that his diary_id is 11.
 
 Alvin starts the process of deleting diary.
 
-Starts by calling DELETE /{diary_id}/{user_id} with diary_id is 1098 and user_id is alvin.
-Then it returns success since that is his user_id and diary_id
+Starts by calling DELETE /diary/{diary_id} with diary_id as 11.
+Then it returns success since that is his diary_id
 
-## Testing results (Needs Updating)
+## Testing results
 
 1. 
-* curl -X 'POST' \
-  'http://localhost:3000/diary/' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '[
-  "Monday", "Wednesday", "Friday"
-]'
-* Response: 9001
+* curl -X 'DELETE' \
+  'https://exercisediary.onrender.com/diary/11' \
+  -H 'accept: application/json'
 
-2. 
-* curl -X 'POST' \
-  'http://localhost:3000/diary/9001/Monday' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "exercise_name": "Bench Press",
-  "goal_reps": 5,
-  "goal_weight": 225
-}'
-* Response: 1
-
-3. curl -X 'POST' \
-  'http://localhost:3000/diary/1' \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{
-  "reps": 5,
-  "weight": 225,
-  "comments": "easy"
-}'
-* Response: "OK"
+* Response: 200
+* Body: "OK" 
 
 
 ## 3. Getting a Past Entry and Inputting a New One
