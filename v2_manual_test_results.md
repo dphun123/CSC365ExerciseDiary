@@ -7,7 +7,7 @@ Alvin starts the process of deleting diary.
 Starts by calling DELETE /diary_id / user_id with diary_id is 1098 and user_id is alvin.
 Then it returns success since that is his user_id and diary_id
 
-# Testing results (Needs Updating)
+## Testing results (Needs Updating)
 
 1. 
 * curl -X 'POST' \
@@ -54,7 +54,7 @@ next he calls /diary/{diary_id}/{day}/{exercise} with exercise=squats to access 
 finally, Jimmy calls PATCH /diary/{diary_id}/{day}/{exercise} to update his diary with his stats for squats for today in case he forgets again tomorrow.
 Jimmy sets a new pr for squats and is ready to break his pr again tomorrow, even if he forgets this new pr.
 
-# Testing results (Needs Updating)
+## Testing results (Needs Updating)
 
 1. 
 * curl -X 'POST' \
