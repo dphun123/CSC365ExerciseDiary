@@ -78,11 +78,13 @@ values
   )
 ;
 
+COMMIT;
+
 insert into
-  "day" (day_name, diary_id)
+  "day" (id, day_name, diary_id)
 values
   (
-    'Tuesday', 13
+    1, 'Tuesday', 13
   )
 ;
 
@@ -110,10 +112,12 @@ values
   )
 ;
 
+COMMIT;
+
 insert into
-  "entry" (goal_reps, goal_weight, exercise_id)
+  "entry" (day_id, goal_reps, goal_weight, exercise_id)
 values
   (
-    10, 225, 3
+    1, 10, 225, 3
   )
 ;
