@@ -27,7 +27,7 @@ Next Jimmy calls GET /diary/{diary_id}/{day}/{exercise} with exercise=squats to 
 Finally, Jimmy calls POST /diary/{diary_id}/{day}/{exercise} (day=Wednesday) to update his diary with his stats for squats for today in case he forgets again tomorrow.
 Jimmy sets a new pr for squats and is ready to break his pr again tomorrow, even if he forgets this new pr.
 
-## Testing results (Needs Updating)
+## Testing results
 
 1. 
 * curl -X 'GET' \
