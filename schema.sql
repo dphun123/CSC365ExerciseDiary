@@ -40,7 +40,7 @@ create table
     constraint Exercise_pkey primary key (id)
   ) tablespace pg_default;
 
-
+/* exercises */
 insert into
   "Exercise" (name, description, body_part)
 values
@@ -49,3 +49,71 @@ values
     'lying on a bench and pressing weight upward using either a barbell or a pair of dumbbells',
     'Chest'
   )
+
+insert into
+  "Exercise" (name, description, body_part)
+values
+  (
+    'Squat',
+    'Keeping your back straight and your head up,
+bend at your knees without your knees passing your toes, 
+sticking out your butt until your legs bend at 90 degrees. Then straighten back up following the same rules in reverse.',
+    'Glutes / Legs'
+  )
+
+/* flow 2 */
+insert into
+  "diary" (id)
+values
+  (
+    11
+  )
+
+/* flow 3 */
+insert into
+  "diary" (id)
+values
+  (
+    13
+  )
+;
+
+insert into
+  "day" (day_name, diary_id)
+values
+  (
+    'Tuesday', 13
+  )
+;
+
+insert into
+  "day" (day_name, diary_id)
+values
+  (
+    'Wednesday', 13
+  )
+;
+
+insert into
+  "day" (day_name, diary_id)
+values
+  (
+    'Thursday', 13
+  )
+;
+
+insert into
+  "day" (day_name, diary_id)
+values
+  (
+    'Saturday', 13
+  )
+;
+
+insert into
+  "entry" (goal_reps, goal_weight, exercise_id)
+values
+  (
+    10, 225, 3
+  )
+;
