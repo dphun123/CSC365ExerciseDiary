@@ -97,14 +97,9 @@ def get_exercises_for_day(diary_id: int, day: str):
 def get_exercise_goals(diary_id: int, day: str, exercise: str):
   with db.engine.begin() as connection:
     goal = connection.execute(sqlalchemy.text("""
-        WITH get_day_id AS (
-          SELECT id
-          FROM day
-          WHERE diary_id = :diary_id AND day_name = :day
-        )
         SELECT en.goal_reps, en.goal_weight
         FROM entry en
-        JOIN get_day_id gdi ON en.day_id = gdi.id
-        WHERE en.day_id = 25
+        JOIN day d ON en.day_id = d.id
+        WHERE d.diary_id = :diary_id AND d.day_name = :day
         """), {"diary_id": diary_id, "day": day, "exercise": exercise}).first()
   return goal.goal_reps, goal.goal_weight
