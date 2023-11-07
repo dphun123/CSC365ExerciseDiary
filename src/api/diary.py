@@ -78,15 +78,11 @@ def get_exercises_for_day(diary_id: int, day: str):
   exercise_names = []
   with db.engine.begin() as connection:
     exercises = connection.execute(sqlalchemy.text("""
-        WITH get_day_id AS (
-          SELECT id
-          FROM day
-          WHERE diary_id = :diary_id AND day_name = :day
-        )
         SELECT ex.name
         FROM entry en
         JOIN exercise ex ON en.exercise_id = ex.id
-        JOIN get_day_id gdi ON en.day_id = gdi.id
+        JOIN day d ON en.day_id = d.id
+        WHERE d.diary_id = :diary_id AND d.day_name = :day
         """), {"diary_id": diary_id, "day": day}).fetchall()
     for row in exercises:
       exercise_names.append(row.name)
