@@ -23,8 +23,8 @@ Jimmy is a daily gym goer and regular user of our exercise diary. Jimmy wants to
 Jimmy wants to access the reps/weight for his squats in his diary and record his stats for today’s workout. To do so he:
 
 First Jimmy calls /diary/{diary_id}/{day} with day=Tuesday to get his exercises from the previous day.
-next he calls /diary/{diary_id}/{day}/{exercise} with exercise=squats to access the stats for his squats from Tuesday.
-finally, Jimmy calls PATCH /diary/{diary_id}/{day}/{exercise} (day=Wednesday) to update his diary with his stats for squats for today in case he forgets again tomorrow.
+Next he calls /diary/{diary_id}/{day}/{exercise} with exercise=squats to access the stats for his squats from Tuesday.
+Finally, Jimmy calls PATCH /diary/{diary_id}/{day}/{exercise} (day=Wednesday) to update his diary with his stats for squats for today in case he forgets again tomorrow.
 Jimmy sets a new pr for squats and is ready to break his pr again tomorrow, even if he forgets this new pr.
 
 ## Testing results (Needs Updating)
