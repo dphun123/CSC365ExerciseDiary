@@ -42,7 +42,7 @@ create table
 
 /* exercises */
 insert into
-  "Exercise" (name, description, body_part)
+  "exercise" (name, description, body_part)
 values
   (
     'Bench Press',
@@ -51,7 +51,7 @@ values
   )
 
 insert into
-  "Exercise" (name, description, body_part)
+  "exercise" (name, description, body_part)
 values
   (
     'Squat',
