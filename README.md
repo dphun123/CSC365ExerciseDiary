@@ -1,4 +1,5 @@
 ﻿# ExerciseDiary
+## https://exercisediary.onrender.com/docs (no API key)
 ### aeji@calpoly.edu (Andrew Ji)
 ### ajung04@calpoly.edu (Alexander Jung)
 ### dphun@calpoly.edu (Dennis Phun)
