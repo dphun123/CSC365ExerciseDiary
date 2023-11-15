@@ -4,16 +4,18 @@ from pydantic import BaseModel
 from src.api import auth
 import sqlalchemy
 from src import database as db
+from src.api import user
 
 router = APIRouter(
   prefix="/diary",
   tags=["diary"],
-  dependencies=[Depends(auth.get_api_key)],
+  dependencies=[Depends(user.authorize)],
 )
 
 # Create a diary
 @router.post("/")
-def create_diary(days: list[str]):
+def create_diary(days: list[str], user=Depends(user.get_user)):
+  print(user)
   with db.engine.begin() as connection:
     diary_id = connection.execute(sqlalchemy.text("INSERT INTO diary DEFAULT VALUES RETURNING id")).first().id
     for day_name in days:
