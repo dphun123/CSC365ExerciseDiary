@@ -56,4 +56,4 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
   
 def get_user():
   res = supabase.auth.get_session()
-  return res.user
+  return res.user.email
