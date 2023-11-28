@@ -42,12 +42,10 @@ def create_goal_entry(diary_id: int, day: str, entry: CreateGoalEntry, user=Depe
       raise HTTPException(status_code=404, detail="This combination of diary and day id's does not exist.")
     try:
       entry_id = connection.execute(sqlalchemy.text("""
-          INSERT INTO goalentry (day_id, exercise_id, goal_reps, goal_weight)
-          SELECT :day_id, exercise.id, :goal_reps, :goal_weight
-          FROM exercise
-          WHERE name = :name
+          INSERT INTO goalentry (day_id, exercise, goal_reps, goal_weight)
+          VALUES (:day_id, :exercise, :goal_reps, :goal_weight)
           RETURNING goalentry.id
-          """), {"day_id": day_id, "name": entry.exercise_name, "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight}).scalar_one()  
+          """), {"day_id": day_id, "exercise": entry.exercise_name, "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight}).scalar_one()  
     except NoResultFound:
       raise HTTPException(status_code=404, detail="An exercise with this name does not exist.")
   return {"entry_id": entry_id}

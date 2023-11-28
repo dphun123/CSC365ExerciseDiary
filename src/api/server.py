@@ -1,7 +1,7 @@
 from fastapi import FastAPI, exceptions
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from src.api import diary, user, entry
+from src.api import diary, user, entry, exercise
 import json
 import logging
 import sys
@@ -22,6 +22,7 @@ app = FastAPI(
 )
 
 app.include_router(user.router)
+app.include_router(exercise.router)
 app.include_router(diary.router)
 app.include_router(entry.router)
 
