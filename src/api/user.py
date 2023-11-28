@@ -36,7 +36,7 @@ def sign_up(credentials: Credentials):
     return "You have successfully been signed up!"
   except Exception as e:
     if str(e) == 'User already registered':
-      raise HTTPException(status_code=400, detail="User already registered! Login.")
+      raise HTTPException(status_code=409, detail="User already registered! Login.")
     raise HTTPException(status_code=500, detail="Something went wrong!")
   
 @router.post("/login")
@@ -51,7 +51,7 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             "user": res.user}
   except Exception as e:
     if str(e) == 'Invalid login credentials':
-      raise HTTPException(status_code=400, detail="Invalid login credentials. Try again.")
+      raise HTTPException(status_code=401, detail="Invalid login credentials. Try again.")
     raise HTTPException(status_code=500, detail="Something went wrong!")
   
 def get_user():
