@@ -1,7 +1,7 @@
 from fastapi import FastAPI, exceptions
 from fastapi.responses import JSONResponse
 from pydantic import ValidationError
-from src.api import diary, user
+from src.api import diary, user, entry
 import json
 import logging
 import sys
@@ -23,6 +23,7 @@ app = FastAPI(
 
 app.include_router(user.router)
 app.include_router(diary.router)
+app.include_router(entry.router)
 
 @app.exception_handler(exceptions.RequestValidationError)
 @app.exception_handler(ValidationError)
