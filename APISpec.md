@@ -131,6 +131,7 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 1. `Get Diary`
 2. `Get Day`
 3. `Get Exercise`
+4. `Get Diaries Minimized`
 
 ### 4.1. Get Diary - `/diary/{diary_id}` (GET)
 
@@ -142,7 +143,7 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 }
 ```
 
-### 4.2. Get Diary - `/diary/{diary_id}/{day}` (GET)
+### 4.2. Get Day - `/diary/{diary_id}/{day}` (GET)
 
 **Returns**:
 
@@ -161,5 +162,48 @@ Removes an exercise from a specific day in the diary. This would remove all curr
   "exercise": "string",
   "goal_weight": "int",
   "goal_reps": "int"
+}
+```
+### 4.4. Get Diaries Minimized - `/diary/mini` (GET)
+
+**Returns**:
+
+```json
+{
+  "diary_list": "int[]"
+}
+```
+
+### 5. Users
+
+1. `New User`
+2. `Login`
+
+### 5.1. Creates New User - `/signup` (POST)
+
+**Request**:
+
+```json
+{
+  "email": "string",
+  "password": "string"
+}
+```
+
+**Returns**:
+
+```json
+{
+  "success" : "boolean"
+}
+```
+
+### 5.2. Login - `/login` (POST)
+
+**Returns**:
+
+```json
+{
+  "success" : "boolean"
 }
 ```
