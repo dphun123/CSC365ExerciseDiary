@@ -81,28 +81,34 @@ class LevelOptions(str, Enum):
 def search_exercises(
   exercise: str = "",
   sort_order_by_rating: SortOrder = SortOrder.desc,
-  muscle: MuscleOptions = None,
-  exercise_type: TypeOptions = None,
-  equipment: EquipmentOptions = None,
-  level: LevelOptions = None,
+  muscle: List[MuscleOptions] = Query(None),
+  type: List[TypeOptions] = Query(None),
+  equipment: List[EquipmentOptions] = Query(None),
+  level: List[LevelOptions] = Query(None),
   count: Union[None, int] = Query(None, gt=0),
 ):
   with db.engine.begin() as connection:
     where_conditions = []
+    params = {}
     if exercise:
-      where_conditions.append(f"exercise.name ILIKE '%{exercise}%'")
+      where_conditions.append("exercise.name ILIKE :exercise")
+      params["exercise"] = f"%{exercise}%"
     if muscle:
-      where_conditions.append(f"exercise.muscle = '{muscle}'")
-    if exercise_type:
-      where_conditions.append(f"exercise.type = '{exercise_type}'")
+      where_conditions.append("exercise.muscle IN :muscle")
+      params["muscle"] = tuple(m.value for m in muscle)
+    if type:
+      where_conditions.append("exercise.type IN :type")
+      params["type"] = tuple(t.value for t in type)
     if equipment:
-      where_conditions.append(f"exercise.equipment = '{equipment}'")
+      where_conditions.append("exercise.equipment IN :equipment")
+      params["equipment"] = tuple(e.value for e in equipment)
     if level:
-      where_conditions.append(f"exercise.level = '{level}'")
+      where_conditions.append("exercise.level IN :level")
+      params["level"] = tuple(l.value for l in level)
 
     where_clause = " AND ".join(where_conditions)
     where_clause = f"WHERE {where_clause}" if where_clause else ""
-    limit_clause = f"LIMIT {count}" if count else ""
+    limit_clause = f"LIMIT :count" if count else ""
 
     exercises = connection.execute(sqlalchemy.text(f"""
         SELECT *
@@ -110,7 +116,7 @@ def search_exercises(
         {where_clause}
         ORDER BY rating {sort_order_by_rating}
         {limit_clause}
-        """)).fetchall()
+        """), params).fetchall()
     
   results = []
   for exercise in exercises:
