@@ -106,7 +106,11 @@ def search_exercises(
 
     where_clause = " AND ".join(where_conditions)
     where_clause = f"WHERE {where_clause}" if where_clause else ""
-    limit_clause = f"LIMIT :count" if count else ""
+    limit_clause = ""
+    if count:
+      limit_clause = f"LIMIT :count"
+      params["count"] = count
+
 
     exercises = connection.execute(sqlalchemy.text(f"""
         SELECT *
