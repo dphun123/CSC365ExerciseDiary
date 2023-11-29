@@ -102,4 +102,19 @@ def edit_entry(entry_id: int, edit_entry: EditEntry = Body(None, embed=True), us
       raise HTTPException(status_code=404, detail="An exercise with this name does not exist. View possible exercises with the exercises endpoint.")
   return {"entry_id": entry_id, **edit_entry.dict()}
 
-#TODO: Get diary_id and day by entry
+@router.get("/diary-day/{entry_id}")
+def get_diary_and_day_by_entry(entry_id: int, user=Depends(user.get_user)):
+  """Get the diary id and day that an entry belongs to."""
+  with db.engine.begin() as connection:
+    diary = connection.execute(sqlalchemy.text("""
+        SELECT diary.owner, diary.id, day.day_name
+        FROM diary
+        JOIN day ON day.diary_id = diary.id
+        JOIN entry ON entry.day_id = day.id
+        WHERE entry.id = :entry_id
+        """), {"entry_id": entry_id}).fetchone()
+    if not diary:
+      raise HTTPException(status_code=404, detail="An entry with this id does not exist.")
+    if diary.owner != user:
+      raise HTTPException(status_code=401, detail="You did not create this entry.")
+  return {"diary_id": diary.id, "day_name": diary.day_name}

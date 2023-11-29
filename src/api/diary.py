@@ -24,6 +24,8 @@ def create_diary(days: list[str], user=Depends(user.get_user)):
           """), {"day_name": day_name, "diary_id": diary_id})
   return {"diary_id": diary_id}
 
+#TODO: add sharing/unsharing diaries
+
 @router.delete("/{diary_id}")
 def delete_diary(diary_id: int, user=Depends(user.get_user)):
   """Delete a diary that you own by id."""
@@ -97,5 +99,5 @@ def get_diary(diary_id: int, user=Depends(user.get_user)):
 #   return exercise_names
 
 #TODO: Get exercises and goals for day
-# @router.get("/{diary_id}/{day}/plan")
-# def get_diary_day(diary_id: int, day: str):
+# @router.get("/plan/{diary_id}/{day}")
+# def get_plan(diary_id: int, day: str):
