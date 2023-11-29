@@ -12,3 +12,5 @@ A Phantom Read could occur if a user (T1) request the exercises from a particula
 A Read Skew could occur if a user (T1) requests a shared diary, then the owner of the diary deletes that diary and creates a new diary with the same id. If T1 then requests the exersises from that diary id, T1 will have recieved the original diary, but the exercises from the new diary.
 ![IMG_0060](https://github.com/dphun123/ExerciseDiary/assets/77179475/afddd129-982e-48a0-a308-76c91933e0b0)
 
+## Handling Concurency
+The minimum isolation level required for our database would be serializable so that we can prevent phantom reads.
