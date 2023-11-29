@@ -13,4 +13,4 @@ A Read Skew could occur if a user (T1) requests a shared diary, then the owner o
 ![IMG_0060](https://github.com/dphun123/ExerciseDiary/assets/77179475/afddd129-982e-48a0-a308-76c91933e0b0)
 
 ## Handling Concurency
-The minimum isolation level required for our database would be serializable so that we can prevent phantom reads.
+The minimum isolation level required for our database would be serializable in order to prevent phantom reads.
