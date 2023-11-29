@@ -164,6 +164,7 @@ Removes an exercise from a specific day in the diary. This would remove all curr
   "goal_reps": "int"
 }
 ```
+
 ### 4.4. Get Diaries Minimized - `/diary/mini` (GET)
 
 **Returns**:
@@ -194,7 +195,7 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 
 ```json
 {
-  "success" : "boolean"
+  "success": "boolean"
 }
 ```
 
@@ -204,6 +205,47 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 
 ```json
 {
-  "success" : "boolean"
+  "success": "boolean"
 }
+```
+
+# 6. Exercises
+
+1. `Search exercises`
+
+## 6.1. Search all exercises - `/exercise/search/` (GET)
+
+**Request**:
+
+```query
+- exercise (Optional[String]): The exercise parameter filters exercises that contain the specified string (case insensitive). Defaults to no filter.
+
+- sort_order_by_rating (Optional[String]): The direction (of rating) by which the exercises are returned. Defaults to descending. Possible values: "asc" (ascending), "desc" (descending).
+
+- muscle (Optional[String[]]): Filters exercises based on the main muscle worked. Defaults to no filter. Multiple values can be selected from [Chest, Forearms, Lats, Middle Back, Lower Back, Neck, Quadriceps, Hamstrings, Calves, Triceps, Traps, Shoulders, Abdominals, Glutes, Biceps, Adductors, Abductors].
+
+- type (Optional[String[]]): Filters exercises based on the exercise type. Defaults to no filter. Multiple values can be selected from [Cardio, Olympic Weightlifting, Plyometrics, Powerlifting, Strength, Stretching, Strongman].
+
+- equipment (Optional[String[]]): Filters exercises based on the equipment needed. Defaults to no filter. Multiple values can be selected from [Bands, Foam Roll, Barbell, Kettlebells, Body Only, Machine, Cable, Medicine Ball, Dumbbell, None, E-Z Curl Bar, Other, Exercise Ball].
+
+- level (Optional[String[]]): Filters exercises based on the recommended experience level. Defaults to no filter. Multiple values can be selected from [Beginner, Intermediate, Expert].
+
+- count (Optional[String[]]): The maximum number of results returned. Defaults to no maximum.
+```
+
+**Returns**:
+
+```json
+[
+  {
+    "name": "string",
+    "rating": "float",
+    "muscle": "string",
+    "type": "string",
+    "equipment": "string",
+    "level": "string",
+    "instructions": "string[]"
+  },
+  ...
+]
 ```
