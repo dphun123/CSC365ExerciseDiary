@@ -249,3 +249,14 @@ Removes an exercise from a specific day in the diary. This would remove all curr
   ...
 ]
 ```
+
+**Errors**:
+
+1. Diary Does Not Exist
+
+```
+Status: 404 Not Found
+Detail: "A diary with this id does not exist."
+```
+
+2.
