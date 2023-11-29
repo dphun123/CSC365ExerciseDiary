@@ -1,8 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm.exc import NoResultFound
-from enum import Enum
-from pydantic import BaseModel
-from src.api import auth
 import sqlalchemy
 from src import database as db
 from src.api import user
@@ -15,16 +12,16 @@ router = APIRouter(
 
 @router.post("/")
 def create_diary(days: list[str], user=Depends(user.get_user)):
-  """Create a diary.\nExample input: ["Monday", "Wednesday", "Friday"]"""
+  """Create a diary."""
   if len(days) == 0:
     raise HTTPException(status_code=422, detail="Your diary must contain at least one day.")
   with db.engine.begin() as connection:
     diary_id = connection.execute(sqlalchemy.text("INSERT INTO diary(owner) VALUES (:user) RETURNING id"), {"user": user}).scalar_one()
     for day_name in days:
       connection.execute(sqlalchemy.text("""
-        INSERT INTO day (day_name, diary_id)
-        VALUES (:day_name, :diary_id)
-        """), {"day_name": day_name, "diary_id": diary_id})
+          INSERT INTO day (day_name, diary_id)
+          VALUES (:day_name, :diary_id)
+          """), {"day_name": day_name, "diary_id": diary_id})
   return {"diary_id": diary_id}
 
 @router.delete("/{diary_id}")
@@ -40,9 +37,9 @@ def delete_diary(diary_id: int, user=Depends(user.get_user)):
     connection.execute(sqlalchemy.text("DELETE FROM diary WHERE id = :diary_id"), {"diary_id": diary_id})
   return f"Diary (id={diary_id}) successfully deleted."
 
-#TODO
-# @router.get("/all")
-# def get_diaries_all(user=Depends(user.get_user)):
+#TODO: need to add entries and comments
+# @router.get("/")
+# def get_all_diaries(user=Depends(user.get_user)):
 #   """Get the list of diaries you own, along with their corresponding days, exercises, and entries."""
 #   diary_list = []
 #   with db.engine.begin() as connection:
@@ -62,29 +59,8 @@ def delete_diary(diary_id: int, user=Depends(user.get_user)):
 #     return "You have no diaries."
 #   return diary_list
 
-@router.get("/mini")
-def get_diaries_minimized(user=Depends(user.get_user)):
-  """Get the list of diaries you own, along with their corresponding days."""
-  diary_list = []
-  with db.engine.begin() as connection:
-    diary_days = connection.execute(sqlalchemy.text("""
-        SELECT diary.id, day.day_name
-        FROM diary
-        JOIN day ON day.diary_id = diary.id
-        WHERE owner = :user
-        """), {"user": user}).fetchall()
-    for diary_day in diary_days:
-      existing_diary = next((d for d in diary_list if d['diary_id'] == diary_day.id), None)
-      if existing_diary is None:
-        diary_list.append({"diary_id": diary_day.id, "days": []})
-      current_diary = next(d for d in diary_list if d['diary_id'] == diary_day.id)
-      current_diary["days"].append(diary_day.day_name)
-  if len(diary_list) == 0:
-    return "You have no diaries."
-  return diary_list
-
 @router.get("/{diary_id}")
-def get_diary_with_days(diary_id: int, user=Depends(user.get_user)):
+def get_diary(diary_id: int, user=Depends(user.get_user)):
   """Get a specific diary that you own by id, along with its corresponding days."""
   days = []
   with db.engine.begin() as connection:
@@ -103,3 +79,23 @@ def get_diary_with_days(diary_id: int, user=Depends(user.get_user)):
     for day in diary:
       days.append(day.day_name)
   return {"diary_id": diary_id, "days": days}
+
+#TODO: Get exercises and all entries/comments for day
+# @router.get("/{diary_id}/{day}")
+# def get_diary_day(diary_id: int, day: str):
+#   exercise_names = []
+#   with db.engine.begin() as connection:
+#     exercises = connection.execute(sqlalchemy.text("""
+#         SELECT ex.name
+#         FROM entry en
+#         JOIN exercise ex ON en.exercise_id = ex.id
+#         JOIN day d ON en.day_id = d.id
+#         WHERE d.diary_id = :diary_id AND d.day_name = :day
+#         """), {"diary_id": diary_id, "day": day}).fetchall()
+#     for row in exercises:
+#       exercise_names.append(row.name)
+#   return exercise_names
+
+#TODO: Get exercises and goals for day
+# @router.get("/{diary_id}/{day}/plan")
+# def get_diary_day(diary_id: int, day: str):
