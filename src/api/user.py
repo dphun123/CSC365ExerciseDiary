@@ -18,6 +18,10 @@ class Credentials(BaseModel):
   email: str
   password: str
 
+email_regex = re.compile(
+    r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+)
+
 password_regex = re.compile(
     r'^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>])(?=.*[a-zA-Z]).{8,}$'
 )
@@ -26,6 +30,8 @@ authorize = OAuth2PasswordBearer(tokenUrl="user/login")
 
 @router.post("/signup")
 def sign_up(credentials: Credentials):
+  if not email_regex.match(credentials.email):
+    raise HTTPException(status_code=400, detail="Invalid email.")
   if not password_regex.match(credentials.password):
     raise HTTPException(status_code=400, detail="Password must be at least 8 characters, contain one uppercase letter, and contain one special character.")
   try:
