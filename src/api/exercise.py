@@ -61,22 +61,6 @@ class LevelOptions(str, Enum):
   intermediate = "Intermediate"
   expert = "Expert"
 
-#TODO: Get the exercise names for the day
-# @router.get("/{diary_id}/{day}")
-# def get_exercises_for_day(diary_id: int, day: str):
-#   exercise_names = []
-#   with db.engine.begin() as connection:
-#     exercises = connection.execute(sqlalchemy.text("""
-#         SELECT ex.name
-#         FROM entry en
-#         JOIN exercise ex ON en.exercise_id = ex.id
-#         JOIN day d ON en.day_id = d.id
-#         WHERE d.diary_id = :diary_id AND d.day_name = :day
-#         """), {"diary_id": diary_id, "day": day}).fetchall()
-#     for row in exercises:
-#       exercise_names.append(row.name)
-#   return exercise_names
-
 @router.get("/search/")
 def search_exercises(
   exercise: str = "",
@@ -87,6 +71,20 @@ def search_exercises(
   level: List[LevelOptions] = Query(None),
   count: Union[None, int] = Query(None, gt=0),
 ):
+  """
+  Search for exercises by exercise name, main muscle worked, exercise type, equipment 
+  needed, and recommended experience level.
+
+  Parameters:
+
+  - The exercise parameter filters to exercises that contain the string (case insensitive). 
+  It defaults to no filter.
+  - The sort_order_by_rating parameter is the direction (of rating) by which the exercises 
+  are returned. It defaults to descending. 
+  - The muscle, type, equipment, and level parameters are filters. They all default to no 
+  filter. ctrl+click to choose multiple options.
+  - The count parameter is the maximum number of results returned. It defaults to no max.  
+  """
   with db.engine.begin() as connection:
     where_conditions = []
     params = {}
@@ -108,7 +106,11 @@ def search_exercises(
 
     where_clause = " AND ".join(where_conditions)
     where_clause = f"WHERE {where_clause}" if where_clause else ""
-    limit_clause = f"LIMIT :count" if count else ""
+    limit_clause = ""
+    if count:
+      limit_clause = f"LIMIT :count"
+      params["count"] = count
+
 
     exercises = connection.execute(sqlalchemy.text(f"""
         SELECT *
