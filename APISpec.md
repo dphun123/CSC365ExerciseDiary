@@ -27,6 +27,13 @@ Creates a new diary.
   "diary_id": "int" /* used for future calls */
 }
 ```
+**Errors**:
+
+1. Tried To Create An Empty Diary
+```
+Status: 422 Unprocessable Entity
+Detail: "Your diary must contain at least one day."
+```
 
 ### 1.2.1 Add Exercise to Diary on a Specific Day - `/diary/{diary_id}/{day}/` (PUT)
 
@@ -50,6 +57,31 @@ Adds an exercise to a specific day in the diary. This would be included in all f
 }
 ```
 
+**Errors**:
+
+1. No Diary
+```
+Status: 404 Does Not Exist
+Detail: "A diary with this id does not exist."
+```
+
+2. Not The Diary Owner
+```
+Status: 401 Unauthorized
+Detail: "You do not own this diary."
+```
+
+3. Incorrect Combination
+```
+Status: 404 Does Not Exist
+Detail: "This combination of diary and day id's does not exist."
+```
+4. Exercise Does Not Exist
+```
+Status: 404 Does Not Exist
+Detail: "An exercise with this name does not exist. View possible exercises with the exercises endpoint."
+```
+
 ### 1.2.2 Remove Exercise from Diary on a Specific Day - `/diary/{diary_id}/{day}/{exercise}` (DELETE)
 
 Removes an exercise from a specific day in the diary. This would remove all current entries as well.
@@ -58,6 +90,30 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 
 ```json
 {}
+```
+
+**Errors**:
+
+1. No Entry
+```
+Status: 404 Does Not Exist
+Detail: "An entry with this id does not exist."
+```
+
+2. Not The Entry Owner
+```
+Status: 401 Unauthorized
+Detail: "You did not create this entry."
+```
+3. Tried To Create An Empty Diary
+```
+Status: 422 Unprocessable Entity
+Detail: At least one value must be edited."
+```
+4. No Exercise
+```
+Status: 404 Does Not Exist
+Detail: "An exercise with this name does not exist. View possible exercises with the exercises endpoint."
 ```
 
 **Returns**:
@@ -88,6 +144,20 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 }
 ```
 
+**Errors**:
+
+1. No Entry
+```
+Status: 404 Does Not Exist
+Detail: "An entry with this id does not exist."
+```
+
+2. Not The Entry Owner
+```
+Status: 401 Unauthorized
+Detail: "You did not create this entry."
+```
+
 ## 2. Diary Deletion
 
 1. `Delete Diary`
@@ -100,6 +170,20 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 {
   "success": "boolean"
 }
+```
+
+**Errors**:
+
+1. No Diary
+```
+Status: 404 Does Not Exist
+Detail: "A diary with this id does not exist."
+```
+
+2. Not The Diary Owner
+```
+Status: 401 Unauthorized
+Detail: "You do not own this diary."
 ```
 
 ## 3. Get Exercise and Recommendations
@@ -142,6 +226,19 @@ Removes an exercise from a specific day in the diary. This would remove all curr
   "days": "int[]"
 }
 ```
+**Errors**:
+
+1. No Diary
+```
+Status: 404 Does Not Exist
+Detail: "A diary with this id does not exist."
+```
+
+2. Not The Diary Owner
+```
+Status: 401 Unauthorized
+Detail: "You do not own this diary."
+```
 
 ### 4.2. Get Day - `/diary/{diary_id}/{day}` (GET)
 
@@ -165,7 +262,7 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 }
 ```
 
-### 4.4. Get Diaries Minimized - `/diary/mini` (GET)
+### 4.4. Get ALL Diaries  - `/all` (GET)
 
 **Returns**:
 
@@ -173,6 +270,13 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 {
   "diary_list": "int[]"
 }
+```
+**Errors**:
+
+1. No Diaries Exist
+```
+Status: 404 Does Not Exist
+Detail: "You have no diaries."
 ```
 
 ### 5. Users
@@ -199,6 +303,31 @@ Removes an exercise from a specific day in the diary. This would remove all curr
 }
 ```
 
+**Errors**:
+
+1. Invalid Email
+```
+Status: 400 Bad Request
+Detail: "Invalid Email"
+```
+
+2. Invalid Password Creation
+```
+Status: 400 Bad Request
+Detail: "Password must be at least 8 characters, contain one uppercase letter, and contain one special character."
+``` 
+
+3. User Already Registered
+```
+Status: 409 Conflict
+Detail: "User already registered! Login."
+```
+
+4. Interal Error
+```
+Status: 500 Internal Error
+Detail: "Something went wrong!"
+``` 
 ### 5.2. Login - `/login` (POST)
 
 **Returns**:
@@ -208,7 +337,19 @@ Removes an exercise from a specific day in the diary. This would remove all curr
   "success": "boolean"
 }
 ```
+**Errors**:
 
+1. Wrong Credentials
+```
+Status: 401 Unauthorized
+Detail: "Invalid login credentials. Try again."
+```
+
+2. Interal Error
+```
+Status: 500 Internal Error
+Detail: "Something went wrong!"
+```
 # 6. Exercises
 
 1. `Search exercises`
