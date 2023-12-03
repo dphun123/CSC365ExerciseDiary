@@ -7,17 +7,17 @@ import logging
 import sys
 
 description = """
-Central Coast Cauldrons is the premier ecommerce site for all your alchemical desires.
+Exercise Diary is the one stop place to store and catalog excersizes and progress.
 """
 
 app = FastAPI(
-    title="Central Coast Cauldrons",
+    title="Exercise Diary",
     description=description,
     version="0.0.1",
     terms_of_service="http://example.com/terms/",
     contact={
-        "name": "Lucas Pierce",
-        "email": "lupierce@calpoly.edu",
+        "name": "Andrew Ji, Alexander Jung, Dennis Phun, Jack Colt",
+        "email": "aeji@calpoly.edu, ajung04@calpoly.edu, dphun@calpoly.edu, jcolt@calpoly.edu",
     },
 )
 
@@ -39,4 +39,4 @@ async def validation_exception_handler(request, exc):
 
 @app.get("/")
 async def root():
-    return {"message": "Welcome to the Central Coast Cauldrons."}
+    return {"message": "Welcome to the Exercise Diary."}
