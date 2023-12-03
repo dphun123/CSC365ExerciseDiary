@@ -15,13 +15,18 @@ def create_diary(days: list[str], user=Depends(user.get_user)):
   """Create a diary."""
   if len(days) == 0:
     raise HTTPException(status_code=422, detail="Your diary must contain at least one day.")
+  unique_day_names = []
+  for day in days:
+    if day in unique_day_names:
+      raise HTTPException(status_code=422, detail=f"Duplicate day name found: {day}.")
+    unique_day_names.append(day)
   with db.engine.begin() as connection:
     diary_id = connection.execute(sqlalchemy.text("INSERT INTO diary(owner) VALUES (:user) RETURNING id"), {"user": user}).scalar_one()
-    for day_name in days:
-      connection.execute(sqlalchemy.text("""
-          INSERT INTO day (day_name, diary_id)
-          VALUES (:day_name, :diary_id)
-          """), {"day_name": day_name, "diary_id": diary_id})
+    values = [{"day_name": day, "diary_id": diary_id} for day in days]
+    connection.execute(sqlalchemy.text("""
+        INSERT INTO day (day_name, diary_id)
+        VALUES (:day_name, :diary_id)
+        """), values)
   return {"diary_id": diary_id}
 
 #TODO: add sharing/unsharing diaries
@@ -58,11 +63,11 @@ def get_all_diaries(user=Depends(user.get_user)):
       current_diary = next(d for d in diary_list if d['diary_id'] == diary.diary_id)
       day = next((d for d in current_diary["days"] if d["day_name"] == diary.day_name), None)
       if day is None:
-          day = {"day_name": diary.day_name, "entries": []}
-          current_diary["days"].append(day)
+        day = {"day_name": diary.day_name, "entries": []}
+        current_diary["days"].append(day)
       if diary.exercise:
-          day["entries"].append({"entry_id": diary.entry_id, "exercise": diary.exercise, "goal_reps": diary.goal_reps,
-              "goal_weight": diary.goal_weight, "reps": diary.reps, "weight": diary.weight, "comments": diary.comments})
+        day["entries"].append({"entry_id": diary.entry_id, "exercise": diary.exercise, "goal_reps": diary.goal_reps,
+            "goal_weight": diary.goal_weight, "reps": diary.reps, "weight": diary.weight, "comments": diary.comments})
   if len(diary_list) == 0:
     raise HTTPException(status_code=404, detail="You have no diaries.")
   return diary_list
@@ -88,21 +93,34 @@ def get_diary(diary_id: int, user=Depends(user.get_user)):
       days.append(day.day_name)
   return {"diary_id": diary_id, "days": days}
 
-#TODO: Get exercises and all entries/comments for day
-# @router.get("/all/{diary_id}/{day}")
-# def get_diary_day(diary_id: int, day: str):
-#   exercise_names = []
-#   with db.engine.begin() as connection:
-#     exercises = connection.execute(sqlalchemy.text("""
-#         SELECT ex.name
-#         FROM entry en
-#         JOIN exercise ex ON en.exercise_id = ex.id
-#         JOIN day d ON en.day_id = d.id
-#         WHERE d.diary_id = :diary_id AND d.day_name = :day
-#         """), {"diary_id": diary_id, "day": day}).fetchall()
-#     for row in exercises:
-#       exercise_names.append(row.name)
-#   return exercise_names
+@router.get("/all/{diary_id}/{day}")
+def get_diary_day(diary_id: int, day: str, user=Depends(user.get_user)):
+    """Get the corresponding exercises and entries for a specific day in a specific diary."""
+    entry_list = []
+    with db.engine.begin() as connection:
+      try:
+        owner = connection.execute(sqlalchemy.text("SELECT owner FROM diary WHERE id = :diary_id"), {"diary_id": diary_id}).scalar_one()
+      except NoResultFound:
+        raise HTTPException(status_code=404, detail="A diary with this id does not exist.")
+      if owner != user:
+        raise HTTPException(status_code=401, detail="You do not own this diary.")
+
+      entries = connection.execute(sqlalchemy.text("""
+          SELECT diary.id AS diary_id, day.day_name, entry.id AS entry_id, entry.exercise, entry.goal_reps,
+              entry.goal_weight, entry.reps, entry.weight, entry.comments
+          FROM diary
+          LEFT JOIN day ON day.diary_id = diary.id
+          LEFT JOIN entry ON entry.day_id = day.id
+          WHERE owner = :user AND diary_id = :diary_id AND day_name = :day
+          """), {"user": user, "diary_id": diary_id, "day": day}).fetchall()
+      if not entries:
+        raise HTTPException(status_code=404, detail="This diary id and day name combination does not exist.")
+      diary_entry = {"diary_id": diary_id, "day_name": day, "entries": []}
+      for entry in entries:
+        diary_entry["entries"].append({"entry_id": entry.entry_id, "exercise": entry.exercise, "goal_reps": entry.goal_reps,
+            "goal_weight": entry.goal_weight, "reps": entry.reps, "weight": entry.weight, "comments": entry.comments})
+      entry_list.append(diary_entry)
+    return entry_list
 
 #TODO: Get exercises and goals for day
 # @router.get("/plan/{diary_id}/{day}")
