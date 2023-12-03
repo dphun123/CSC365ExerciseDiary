@@ -104,7 +104,6 @@ def get_diary_day(diary_id: int, day: str, user=Depends(user.get_user)):
         raise HTTPException(status_code=404, detail="A diary with this id does not exist.")
       if owner != user:
         raise HTTPException(status_code=401, detail="You do not own this diary.")
-
       entries = connection.execute(sqlalchemy.text("""
           SELECT diary.id AS diary_id, day.day_name, entry.id AS entry_id, entry.exercise, entry.goal_reps,
               entry.goal_weight, entry.reps, entry.weight, entry.comments
@@ -122,6 +121,34 @@ def get_diary_day(diary_id: int, day: str, user=Depends(user.get_user)):
       entry_list.append(diary_entry)
     return entry_list
 
-#TODO: Get exercises and goals for day
-# @router.get("/plan/{diary_id}/{day}")
-# def get_plan(diary_id: int, day: str):
+@router.get("/plan/{diary_id}/{day}")
+def get_plan(diary_id: int, day: str, user=Depends(user.get_user)):
+  """Get the corresponding exercises and latest goal entries for a specific day in a specific diary."""
+  entry_list = []
+  with db.engine.begin() as connection:
+    try:
+      owner = connection.execute(sqlalchemy.text("SELECT owner FROM diary WHERE id = :diary_id"), {"diary_id": diary_id}).scalar_one()
+    except NoResultFound:
+      raise HTTPException(status_code=404, detail="A diary with this id does not exist.")
+    if owner != user:
+      raise HTTPException(status_code=401, detail="You do not own this diary.")
+    entries = connection.execute(sqlalchemy.text("""
+        WITH rankedEntry AS (
+          SELECT *, ROW_NUMBER() OVER (PARTITION BY day_id, exercise ORDER BY created_at DESC) ranking
+          FROM entry
+        )
+        SELECT diary.id AS diary_id, day.day_name, entry.id AS entry_id, entry.exercise, entry.goal_reps,
+            entry.goal_weight, entry.reps, entry.weight, entry.comments
+        FROM diary
+        LEFT JOIN day ON day.diary_id = diary.id
+        LEFT JOIN rankedEntry entry ON entry.day_id = day.id AND entry.ranking = 1
+        WHERE owner = :user AND diary_id = :diary_id AND day_name = :day
+        """), {"user": user, "diary_id": diary_id, "day": day}).fetchall()
+    if not entries:
+      raise HTTPException(status_code=404, detail="This diary id and day name combination does not exist.")
+    diary_entry = {"diary_id": diary_id, "day_name": day, "entries": []}
+    for entry in entries:
+      diary_entry["entries"].append({"entry_id": entry.entry_id, "exercise": entry.exercise,
+                                     "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight})
+    entry_list.append(diary_entry)
+  return entry_list
