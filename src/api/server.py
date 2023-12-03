@@ -7,7 +7,7 @@ import logging
 import sys
 
 description = """
-Exercise Diary is the one stop place to store and catalog excersizes and progress.
+Exercise Diary is the one stop place to store and catalog exercises and progress.
 """
 
 app = FastAPI(
