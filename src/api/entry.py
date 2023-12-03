@@ -13,7 +13,7 @@ router = APIRouter(
   dependencies=[Depends(user.authorize)],
 )
 
-class GoalEntry(BaseModel):
+class CreateEntry(BaseModel):
   exercise: str
   goal_reps: int
   goal_weight: int
@@ -27,7 +27,7 @@ class EditEntry(BaseModel):
   comments: Optional[str]
 
 @router.post("/{diary_id}/{day}")
-def create_entry(diary_id: int, day: str, entry: GoalEntry, user=Depends(user.get_user)):
+def create_entry(diary_id: int, day: str, entry: CreateEntry, user=Depends(user.get_user)):
   """Add a goal entry in a specific diary and for a specific day."""
   with db.engine.begin() as connection:
     try:
