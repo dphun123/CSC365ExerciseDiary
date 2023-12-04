@@ -50,7 +50,8 @@ def get_all_diaries(user=Depends(user.get_user)):
   diary_list = []
   with db.engine.begin() as connection:
     diaries = connection.execute(sqlalchemy.text("""
-        SELECT diary.id AS diary_id, day.day_name, entry.exercise, entry.id AS entry_id, goal_reps, goal_weight, reps, weight, comments
+        SELECT diary.id AS diary_id, diary.created_at diary_creation, day.day_name, entry.exercise,
+            entry.id AS entry_id, entry.created_at entry_creation, goal_reps, goal_weight, reps, weight, comments
         FROM diary
         LEFT JOIN day ON day.diary_id = diary.id
         LEFT JOIN entry ON entry.day_id = day.id
@@ -60,14 +61,14 @@ def get_all_diaries(user=Depends(user.get_user)):
     for diary in diaries:
       existing_diary = next((d for d in diary_list if d['diary_id'] == diary.diary_id), None)
       if existing_diary is None:
-        diary_list.append({"diary_id": diary.diary_id, "days": []})
+        diary_list.append({"diary_id": diary.diary_id, "created_at": diary.diary_creation, "days": []})
       current_diary = next(d for d in diary_list if d['diary_id'] == diary.diary_id)
       day = next((d for d in current_diary["days"] if d["day_name"] == diary.day_name), None)
       if day is None:
         day = {"day_name": diary.day_name, "entries": []}
         current_diary["days"].append(day)
       if diary.exercise:
-        day["entries"].append({"entry_id": diary.entry_id, "exercise": diary.exercise, "goal_reps": diary.goal_reps,
+        day["entries"].append({"entry_id": diary.entry_id, "created_at": diary.entry_creation, "exercise": diary.exercise, "goal_reps": diary.goal_reps,
             "goal_weight": diary.goal_weight, "reps": diary.reps, "weight": diary.weight, "comments": diary.comments})
   if len(diary_list) == 0:
     raise HTTPException(status_code=404, detail="You have no diaries.")
@@ -107,8 +108,8 @@ def get_diary_day(diary_id: int, day: str, user=Depends(user.get_user)):
       if owner != user:
         raise HTTPException(status_code=401, detail="You do not own this diary.")
       entries = connection.execute(sqlalchemy.text("""
-          SELECT diary.id AS diary_id, day.day_name, entry.id AS entry_id, entry.exercise, entry.goal_reps,
-              entry.goal_weight, entry.reps, entry.weight, entry.comments
+          SELECT diary.id AS diary_id, diary.created_at diary_creation, day.day_name, entry.id AS entry_id, entry.exercise,
+              entry.goal_reps, entry.goal_weight, entry.reps, entry.weight, entry.comments, entry.created_at entry_creation
           FROM diary
           LEFT JOIN day ON day.diary_id = diary.id
           LEFT JOIN entry ON entry.day_id = day.id
@@ -117,10 +118,10 @@ def get_diary_day(diary_id: int, day: str, user=Depends(user.get_user)):
           """), {"user": user, "diary_id": diary_id, "day": day}).fetchall()
       if not entries:
         raise HTTPException(status_code=404, detail="This diary id and day name combination does not exist.")
-      diary_entry = {"diary_id": diary_id, "day_name": day, "entries": []}
+      diary_entry = {"diary_id": diary_id, "created_at": entries[0].diary_creation, "day_name": day, "entries": []}
       for entry in entries:
-        diary_entry["entries"].append({"entry_id": entry.entry_id, "exercise": entry.exercise, "goal_reps": entry.goal_reps,
-            "goal_weight": entry.goal_weight, "reps": entry.reps, "weight": entry.weight, "comments": entry.comments})
+        diary_entry["entries"].append({"entry_id": entry.entry_id, "created_at": entry.entry_creation, "exercise": entry.exercise,
+            "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight, "reps": entry.reps, "weight": entry.weight, "comments": entry.comments})
       entry_list.append(diary_entry)
     return entry_list
 
@@ -140,8 +141,8 @@ def get_plan(diary_id: int, day: str, user=Depends(user.get_user)):
           SELECT *, ROW_NUMBER() OVER (PARTITION BY day_id, exercise ORDER BY created_at DESC) ranking
           FROM entry
         )
-        SELECT diary.id AS diary_id, day.day_name, entry.id AS entry_id, entry.exercise, entry.goal_reps,
-            entry.goal_weight, entry.reps, entry.weight, entry.comments
+        SELECT diary.id AS diary_id, diary.created_at diary_creation, day.day_name, entry.id AS entry_id, entry.exercise, entry.goal_reps,
+            entry.goal_weight, entry.reps, entry.weight, entry.comments, entry.created_at entry_creation
         FROM diary
         LEFT JOIN day ON day.diary_id = diary.id
         LEFT JOIN rankedEntry entry ON entry.day_id = day.id AND entry.ranking = 1
@@ -149,9 +150,44 @@ def get_plan(diary_id: int, day: str, user=Depends(user.get_user)):
         """), {"user": user, "diary_id": diary_id, "day": day}).fetchall()
     if not entries:
       raise HTTPException(status_code=404, detail="This diary id and day name combination does not exist.")
-    diary_entry = {"diary_id": diary_id, "day_name": day, "entries": []}
+    diary_entry = {"diary_id": diary_id, "created_at": entries[0].diary_creation, "day_name": day, "entries": []}
     for entry in entries:
-      diary_entry["entries"].append({"entry_id": entry.entry_id, "exercise": entry.exercise,
-                                     "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight})
+      diary_entry["entries"].append({"entry_id": entry.entry_id, "created_at": entry.entry_creation,
+          "exercise": entry.exercise, "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight})
+    entry_list.append(diary_entry)
+  return entry_list
+
+
+@router.get("/previous/{diary_id}/{day}")
+def get_previous(diary_id: int, day: str, user=Depends(user.get_user)):
+  """Get the corresponding exercises and latest filled entries for a specific day in a specific diary."""
+  entry_list = []
+  with db.engine.begin() as connection:
+    try:
+      owner = connection.execute(sqlalchemy.text("SELECT owner FROM diary WHERE id = :diary_id"), {"diary_id": diary_id}).scalar_one()
+    except NoResultFound:
+      raise HTTPException(status_code=404, detail="A diary with this id does not exist.")
+    if owner != user:
+      raise HTTPException(status_code=401, detail="You do not own this diary.")
+    entries = connection.execute(sqlalchemy.text("""
+        WITH rankedEntry AS (
+          SELECT *, ROW_NUMBER() OVER (PARTITION BY day_id, exercise ORDER BY created_at DESC) ranking
+          FROM entry
+          WHERE reps IS NOT NULL AND weight IS NOT NULL
+        )
+        SELECT diary.id AS diary_id, diary.created_at diary_creation, day.day_name, entry.id AS entry_id, entry.exercise, entry.goal_reps,
+            entry.goal_weight, entry.reps, entry.weight, entry.comments, entry.created_at entry_creation
+        FROM diary
+        LEFT JOIN day ON day.diary_id = diary.id
+        LEFT JOIN rankedEntry entry ON entry.day_id = day.id AND entry.ranking = 1
+        WHERE owner = :user AND diary_id = :diary_id AND day_name = :day
+        """), {"user": user, "diary_id": diary_id, "day": day}).fetchall()
+    if not entries:
+      raise HTTPException(status_code=404, detail="This diary id and day name combination does not exist.")
+    diary_entry = {"diary_id": diary_id, "created_at": entries[0].diary_creation, "day_name": day, "entries": []}
+    for entry in entries:
+      diary_entry["entries"].append({"entry_id": entry.entry_id, "created_at": entry.entry_creation,
+          "exercise": entry.exercise, "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight,
+          "reps": entry.reps, "weight": entry.weight, "comments": entry.comments})
     entry_list.append(diary_entry)
   return entry_list

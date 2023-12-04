@@ -10,7 +10,7 @@
 
 - Having authentication so I can't just do "my diary id - 1" to find someone else's diary would probably be a good idea.
 
-  - Fixed. Set up authentication/authorization for all the diary endpoints.
+  - Implemented. Set up authentication/authorization for all the diary endpoints.
 
 - Consider not having an API key required, as potential users should be able to access all the routes.
 
@@ -34,7 +34,7 @@
 
 - Add human readable errors if (For ex. ) an invalid diary id was entered.
 
-  - Fixed. Every endpoint has readable errors.
+  - Implemented. Every endpoint has readable errors.
 
 - Try to find a way, if possible, to avoid having the connection.execute() inside a for loop, this will be pretty slow because it has to send and wait for quite a few queries.
 
@@ -42,7 +42,8 @@
 
 - Consider changing your create diary route to be /diary/create instead of /diary to clarify what the route is supposed to be. As
   your other routes also start the route with /diary, it seems more like a category then an endpoint.
-- Not implemented. POST implies creation.
+
+  - Not implemented. POST implies creation.
 
 - Consider changing your HTTP verb for editing an entry to use PUT, which is more specific to Update operations.
 
@@ -72,11 +73,11 @@
 
 - Add docstrings to endpoints that need further explanation on what it does for more documentation.
 
-  - Fixed.
+  - Implemented.
 
 - In the add_entry function, add input validation to confirm that the diary to add the entry to already exists, and handle that case.
 
-  - Fixed. create_entry now creates a new entry with error checking.
+  - Implemented. create_entry now creates a new entry with error checking.
 
 - Consider implementing unit tests to ensure every endpoint is working as expected.
 
@@ -137,7 +138,7 @@
 
 - add error messages
 
-  - Fixed.
+  - Implemented.
 
 - specify dates instead of days for al data types
 
@@ -151,3 +152,140 @@
   - Not implemented. We wanted to allow users to make their own routines in their diaries. For example: "Push", "Pull", "Legs" would be a valid routine and each one represents a day.
 
 ## Schema/API Design
+
+### Issue #2
+
+- Currently the goal_reps and goal_weight is stored alongside each Entry. But I think that a lot of people would like to set a goal and have that carry forward to all their entries, instead of entering a goal each time.
+
+  - Implemented. create_entry uses most recent goal values. Has error checking for the first entry needing goal values.
+
+- Expose an actual date, instead of just arbitrary strings, might help keep everything consistent. Since I might want to have a gym diary, but I have to include every date when creating the diary and I might not have a routine that can nicely fit. I might just want to know when exactly I did an exercise.
+
+  - Implemented. Diaries and entries now have created_at.
+
+- When creating a new diary, there's an option to have it be a copy of an existing diary. I think it makes sense to extract this into its own route (maybe /diary/copy), just so we do not need to always specify NULL for a new entry.
+
+  - Not implemented. We decided to scrap the endpoint.
+
+- Add usernames/emails + passwords to your design. Since your ER diagram shows users with just a Name and ID, but we can
+  spoof users pretty easily by trying other IDs, so integrating a email + (hashed) password would help to keep the users'
+  diary entries secure.
+
+  - Implemented. We used supabase auth to save emails and passwords when users signup and FastAPI auth form and supabase to authenticate users. All diary and entry endpoints are authorized by logging in.
+
+- The users table also seems to have not made it into the schema. It would be nice to keep track of which diaries belong to which users.
+
+  - Not implemented. We keep users saved with supabase auth, which is separate from the tables.
+
+- Get Exercise Recommendations only includes 1 weight and reps for all exercises. It would be nice to be able to recommend
+  a weight and rep goal for each exercise.
+
+  - Not implemented. We decided to only have an exercise search endpoint.
+
+- Instead of looking at a specific date for the last exercise, it would be nice to just find the last time I did a specific exercise.
+
+  - Implemented somewhat. get_previous allows users to find their most recent filled entry for an exercise on a specific day in a specific diary.
+
+- Your design currently doesn't track how long a user spent on an exercise, which was documented in your Exceptions.
+
+  - Not implemented. We scrapped that.
+
+- Currently the diary does not record which user created it.
+
+  - Fixed. Diaries are linked to users.
+
+- Almost all columns in your schema are allowed to be null, which could be non-null for some. For Ex, the day_id for entry. We do need to know when a specific entry happened.
+
+  - Fixed.
+
+- Consider having each entry associated directly with a diary, as someone might not have a defined date for each time they go to a gym. (They didn't setup a date per Weekday when creating a diary).
+
+  - Not implemented. It would mess up some endpoints.
+
+- Consider adding another entity for body parts since some exercises will exercise the same body part, it would be nice to model this in the relationships between the entities. It will also help with normalization because then we don't have any repeated information.
+
+  - Not sure.
+
+- There are a few syntax issues with your schema.sql. There are semicolons on line 51 and after a few insert statements. The table definition order causes some errors due to foreign key references being undefined.
+
+  - Fixed. The ordering of table creation is now correct.
+
+- Consider adding a route so that a user may add their own custom exercises.
+  - Not implemented. We wanted a foreign key relation.
+
+### Issue #7
+
+- Consider separating the DDL (creating the tables) with the DML (inserts) into different scripts for better readability.
+
+  - Fixed. We now only have the insert for the exercise table, removing the different flows.
+
+- Implement the users class that is specified in the ERD, and pass those credentials in as parameters to the entry entities to reflect which diary/entries belong to which user.
+
+  - Implemented somewhat. We used supabase auth instead. Diaries are linked to users.
+
+- Add additional attributes to the user class than what is in the ERD that would make them unique. For example emails, phone numbers, password, etc. with a unique constraint.
+
+  - Implemented. Users are differentiated by email.
+
+- Add a foreign key constraint of the diary_id to the users table if implemented so diaries can be associated with which user created them.
+
+  - Not implemented. Used supabase auth.
+
+- Try adding comments to the schema.sql to better document what each table represents.
+
+  - Not sure. Can see what tables represent already?
+
+- Many columns of the entry table seem to be nullable, but I think it makes more sense for weight and/or reps to have to have a value when adding an entry
+
+  - Fixed somewhat. We wanted them to be nullable because we have entry creation and entry edits accessing the same row.
+
+- Consider modifying the delete diary endpoint to not actually delete that diary from the DB, but maybe add another column that indicates deletion and set that to True when deleted. This way, there is available history for the user if they accidentally delete a diary or other cases.
+
+  - Not implemented. Don't care about logging.
+
+- Avoid using just null as default type, and explicitly have a default type.
+
+  - Implemented somewhat. Again, we wanted some values to be nullable, and a value like 0 would be valid, so there is nothing to default to that makes sense.
+
+- In the entries table, foreign keys are allowed to be null, but I think they should be modified to be: day_id BIGINT NOT NULL, exercise_id BIGINT NOT NULL,
+
+  - Fixed.
+
+- An idea that would be cool to implement are enum categories of exercise types like cardio, push, pull, etc.
+
+  - Implemented. We used this multiple times for the exercise search endpoint.
+
+- Modify the endpoints to ensure they are all returning in JSON format.
+  - Fixed.
+
+### Issue #10
+
+- New diary does not actually take in three strings for user_id, days, and copy_id as specified in api doc
+
+  - Not implemented. We decided to scrap copying.
+
+- The string value that /diary takes in could be improved with a datestring instead of a string
+  - Not implemented. We wanted users to be able to have custom days such as "Push", "Pull", and "Legs".
+- Day table take in date_time instead of ::text
+  - Not implemented. See above.
+- Days of the week should have more info and the date should be logged instead because the day can be gotten from that information
+  - Not sure.
+- Edit entry still returns ok if entry may or may not exist
+  - Fixed. Added error checking.
+- Day string in GET /diary/{diary_id}/{day} should be of type datestring
+- /diary/{diary_id}{exercises} (GET) does not exist
+
+  - Not implemented. We scrapped that.
+
+- Rename diary to user_id and link user_id with name. Don’t need many diaries for one user. Associate goals, weights, info in different tables with relation to a user_id
+  - Implemented somewhat. Users can have multiple diaries and are linked by email.
+- Change get exercise for a day to get most recent weights and possibly add most recent weights for exercises with respect to a exercise group
+  - Implemented. get_previous gets the latest filled entry for each exercise for a specific day in a specific diary.
+- Separate goal_weights and goal_reps from reps and weight. The goal should be put in separately so they can work towards it as they upload their reps and weight
+  - Fixed.
+- /diary/{diary_id}/{day}/{exercise} days should not be used to look up a goal. A goal should be associated with a user/diary_id and the goal can contain goal weight, exercise, and date to reach it by. If you need the day of
+  - Not implemented. It makes sense if you are doing the same exercises on each day, but you can just make a 1 day routine then.
+- Delete always returns ok even for things i’ve previously deleted or for negative ids that I don’t think would be in the table
+  - Fixed
+- No information should be updated and things should be ledgerized so users can see their history
+  - Not implemented.
