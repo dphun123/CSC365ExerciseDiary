@@ -45,13 +45,27 @@ def create_entry(diary_id: int, day: str, entry: CreateEntry, user=Depends(user.
     except NoResultFound:
       raise HTTPException(status_code=404, detail="This combination of diary and day id's does not exist.")
     try:
+      exercise_name = connection.execute(sqlalchemy.text("""
+          SELECT name
+          FROM exercise
+          WHERE name ILIKE :exercise
+          """), {"exercise": entry.exercise}).scalar_one()
       entry_id = connection.execute(sqlalchemy.text("""
-          INSERT INTO entry (day_id, exercise, goal_reps, goal_weight)
-          VALUES (:day_id, :exercise, :goal_reps, :goal_weight)
-          RETURNING id
-          """), {"day_id": day_id, "exercise": entry.exercise, "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight}).scalar_one()  
-    except IntegrityError:
-      raise HTTPException(status_code=404, detail="An exercise with this name does not exist. View possible exercises with the exercises endpoint.")
+        INSERT INTO entry (day_id, exercise, goal_reps, goal_weight)
+        VALUES (:day_id, :exercise, :goal_reps, :goal_weight)
+        RETURNING id
+        """), {"day_id": day_id, "exercise": exercise_name, "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight}).scalar_one()  
+    except:
+      exercises = connection.execute(sqlalchemy.text("""
+          SELECT name
+          FROM exercise
+          WHERE name ILIKE :exercise
+          """), {"exercise": f"%{entry.exercise}%"}).scalars()
+      exercises = ', '.join(exercises)
+      if exercises:
+        raise HTTPException(status_code=404, detail=f"Exercise not found. Did you mean one of these: {exercises}?")
+      else:
+        raise HTTPException(status_code=404, detail="An exercise with this name (or similar) does not exist. View possible exercises with the exercises endpoint.")
   return {"entry_id": entry_id}
 
 @router.delete("/{entry_id}")
@@ -75,7 +89,7 @@ def delete_entry(entry_id: int, user=Depends(user.get_user)):
 
 @router.patch("/{entry_id}")
 def edit_entry(entry_id: int, edit_entry: EditEntry = Body(None, embed=True), user=Depends(user.get_user)):
-  """Edit an entry that you created by id. Delete any values you do not want updated."""
+  """Edit an entry that you created by id. Default values will not lead to updates."""
   with db.engine.begin() as connection:
     try:
       owner = connection.execute(sqlalchemy.text("""
@@ -92,15 +106,33 @@ def edit_entry(entry_id: int, edit_entry: EditEntry = Body(None, embed=True), us
     if all(value is None for value in edit_entry.dict().values()):
       raise HTTPException(status_code=422, detail="At least one value must be edited.")
     try:
-      set_clause = ", ".join([f"{key} = :{key}" for key, value in edit_entry.dict().items() if value is not None])
+      filtered_entry = {key: value for key, value in edit_entry.dict().items() if value not in (0, "string")}
+      print(filtered_entry)
+      if 'exercise' in filtered_entry:
+        exercise_name = connection.execute(sqlalchemy.text("""
+            SELECT name
+            FROM exercise
+            WHERE name ILIKE :exercise
+            """), {"exercise": filtered_entry['exercise']}).scalar_one()
+        filtered_entry['exercise'] = exercise_name
+      set_clause = ", ".join([f"{key} = :{key}" for key, value in filtered_entry.items() if value is not None])
       connection.execute(sqlalchemy.text(f"""
           UPDATE entry
           SET {set_clause}
           WHERE id = :entry_id
-          """), {"entry_id": entry_id, **edit_entry.dict()})
-    except IntegrityError:
-      raise HTTPException(status_code=404, detail="An exercise with this name does not exist. View possible exercises with the exercises endpoint.")
-  return {"entry_id": entry_id, **edit_entry.dict()}
+          """), {"entry_id": entry_id, **filtered_entry})
+    except:
+      exercises = connection.execute(sqlalchemy.text("""
+          SELECT name
+          FROM exercise
+          WHERE name ILIKE :exercise
+          """), {"exercise": f"%{filtered_entry['exercise']}%"}).scalars()
+      exercises = ', '.join(exercises)
+      if exercises:
+        raise HTTPException(status_code=404, detail=f"Exercise not found. Did you mean one of these: {exercises}?")
+      else:
+        raise HTTPException(status_code=404, detail="An exercise with this name (or similar) does not exist. View possible exercises with the exercises endpoint.")
+  return {"entry_id": entry_id, **filtered_entry}
 
 @router.get("/diary-day/{entry_id}")
 def get_diary_and_day_by_entry(entry_id: int, user=Depends(user.get_user)):

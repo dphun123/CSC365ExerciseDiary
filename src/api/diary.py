@@ -55,6 +55,7 @@ def get_all_diaries(user=Depends(user.get_user)):
         LEFT JOIN day ON day.diary_id = diary.id
         LEFT JOIN entry ON entry.day_id = day.id
         WHERE owner = :user
+        ORDER BY diary.id, day.id, entry.id
         """), {"user": user}).fetchall()
     for diary in diaries:
       existing_diary = next((d for d in diary_list if d['diary_id'] == diary.diary_id), None)
@@ -88,6 +89,7 @@ def get_diary(diary_id: int, user=Depends(user.get_user)):
         FROM diary
         JOIN day ON day.diary_id = diary.id
         WHERE diary.id = :diary_id AND owner = :user
+        ORDER BY day.id
         """), {"diary_id": diary_id, "user": user}).fetchall()
     for day in diary:
       days.append(day.day_name)
@@ -111,6 +113,7 @@ def get_diary_day(diary_id: int, day: str, user=Depends(user.get_user)):
           LEFT JOIN day ON day.diary_id = diary.id
           LEFT JOIN entry ON entry.day_id = day.id
           WHERE owner = :user AND diary_id = :diary_id AND day_name = :day
+          ORDER BY entry.id
           """), {"user": user, "diary_id": diary_id, "day": day}).fetchall()
       if not entries:
         raise HTTPException(status_code=404, detail="This diary id and day name combination does not exist.")
