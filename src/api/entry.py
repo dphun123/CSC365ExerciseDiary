@@ -99,7 +99,7 @@ def delete_entry(entry_id: int, user=Depends(user.get_user)):
           JOIN day ON day.diary_id = diary.id
           JOIN entry ON entry.day_id = day.id
           WHERE entry.id = :entry_id
-      """), {"entry_id": entry_id}).scalar_one()
+          """), {"entry_id": entry_id}).scalar_one()
     except NoResultFound:
       raise HTTPException(status_code=404, detail="An entry with this id does not exist.")
     if owner != user:
@@ -118,7 +118,7 @@ def edit_entry(entry_id: int, edit_entry: EditEntry = Body(None, embed=True), us
           JOIN day ON day.diary_id = diary.id
           JOIN entry ON entry.day_id = day.id
           WHERE entry.id = :entry_id
-      """), {"entry_id": entry_id}).scalar_one()
+          """), {"entry_id": entry_id}).scalar_one()
     except NoResultFound:
       raise HTTPException(status_code=404, detail="An entry with this id does not exist.")
     if owner != user:
