@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, HTTPException
 from enum import Enum
 from typing import List, Union
 import sqlalchemy
@@ -111,12 +111,11 @@ def search_exercises(
       limit_clause = f"LIMIT :count"
       params["count"] = count
 
-
     exercises = connection.execute(sqlalchemy.text(f"""
         SELECT *
         FROM exercise
         {where_clause}
-        ORDER BY rating {sort_order_by_rating}
+        ORDER BY rating {sort_order_by_rating.value}
         {limit_clause}
         """), params).fetchall()
     
@@ -131,4 +130,6 @@ def search_exercises(
         "level": exercise.level,
         "instructions": exercise.instructions
     })
+  if len(results) == 0:
+    raise HTTPException(status_code=404, detail="No exercises found with the set filters.")
   return results

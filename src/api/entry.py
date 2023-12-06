@@ -126,7 +126,12 @@ def edit_entry(entry_id: int, edit_entry: EditEntry = Body(None, embed=True), us
     try:
       filtered_entry = {key: value for key, value in edit_entry.dict().items() if value not in (0, "string")}
       if all(value is None for value in filtered_entry.values()):
-        raise HTTPException(status_code=422, detail="At least one value must be edited.")
+        detail_message = "At least one value must be edited."
+        raise HTTPException(status_code=422, detail=detail_message)
+      for value in filtered_entry.values():
+        if type(value) == int and value < 0:
+          detail_message = "Values can't be negative."
+          raise HTTPException(status_code=422, detail=detail_message)
       if 'exercise' in filtered_entry:
         exercise_name = connection.execute(sqlalchemy.text("""
             SELECT name
@@ -141,7 +146,7 @@ def edit_entry(entry_id: int, edit_entry: EditEntry = Body(None, embed=True), us
           WHERE id = :entry_id
           """), {"entry_id": entry_id, **filtered_entry})
     except HTTPException:
-      raise HTTPException(status_code=422, detail="At least one value must be edited.")
+      raise HTTPException(status_code=422, detail=detail_message)
     except:
       exercises = connection.execute(sqlalchemy.text("""
           SELECT name
