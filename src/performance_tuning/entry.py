@@ -1,10 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from sqlalchemy.orm.exc import NoResultFound
-from sqlalchemy.exc import IntegrityError
-from typing import Union, Optional
+from typing import Optional
 from pydantic import BaseModel
 import sqlalchemy
-from src import database as db
+from src import pt_database as db
 from src.api import user
 
 router = APIRouter(
@@ -32,6 +31,9 @@ def create_entry(diary_id: int, day: str, entry: CreateEntry, user=Depends(user.
   with db.engine.begin() as connection:
     try:
       owner = connection.execute(sqlalchemy.text("SELECT owner FROM diary WHERE id = :diary_id"), {"diary_id": diary_id}).scalar_one()
+      explain = connection.execute(sqlalchemy.text("EXPLAIN ANALYZE SELECT owner FROM diary WHERE id = :diary_id"), {"diary_id": diary_id}).fetchall()
+      for row in explain:
+        print(row)
     except NoResultFound:
       raise HTTPException(status_code=404, detail="A diary with this id does not exist.")
     if owner != user:
@@ -42,6 +44,14 @@ def create_entry(diary_id: int, day: str, entry: CreateEntry, user=Depends(user.
           FROM day
           WHERE diary_id = :diary_id AND day_name = :day
           """), {"diary_id": diary_id, "day": day}).scalar_one()
+      explain2 = connection.execute(sqlalchemy.text("""
+          EXPLAIN ANALYZE
+          SELECT id
+          FROM day
+          WHERE diary_id = :diary_id AND day_name = :day
+          """), {"diary_id": diary_id, "day": day}).fetchall()
+      for row in explain2:
+        print(row)
     except NoResultFound:
       raise HTTPException(status_code=404, detail="This combination of diary and day id's does not exist.")
     try:
@@ -50,6 +60,14 @@ def create_entry(diary_id: int, day: str, entry: CreateEntry, user=Depends(user.
           FROM exercise
           WHERE name ILIKE :exercise
           """), {"exercise": entry.exercise}).scalar_one()
+      explain3 = connection.execute(sqlalchemy.text("""
+          EXPLAIN ANALYZE
+          SELECT name
+          FROM exercise
+          WHERE name ILIKE :exercise
+          """), {"exercise": entry.exercise}).fetchall()
+      for row in explain3:
+        print(row)
       filtered_entry = {key: value for key, value in entry.dict().items() if value not in (0, "string")}
       if 'goal_reps' not in filtered_entry or 'goal_weight not in filtered_entry':
         goal_values = connection.execute(sqlalchemy.text("""
@@ -60,6 +78,17 @@ def create_entry(diary_id: int, day: str, entry: CreateEntry, user=Depends(user.
             WHERE diary_id = :diary_id AND day_name = :day AND entry.exercise = :exercise
             ORDER BY entry.created_at DESC
             """), {"diary_id": diary_id, "day": day, "exercise": exercise_name}).fetchone()
+        explain4 = connection.execute(sqlalchemy.text("""
+            EXPLAIN ANALYZE
+            SELECT goal_reps, goal_weight
+            FROM diary
+            JOIN day ON day.diary_id = diary.id
+            JOIN entry ON entry.day_id = day.id
+            WHERE diary_id = :diary_id AND day_name = :day AND entry.exercise = :exercise
+            ORDER BY entry.created_at DESC
+            """), {"diary_id": diary_id, "day": day, "exercise": exercise_name}).fetchall()
+        for row in explain4:
+          print(row)
         if 'goal_reps' not in filtered_entry:
           if goal_values.goal_reps == None:
             raise HTTPException(status_code=422)
@@ -73,6 +102,14 @@ def create_entry(diary_id: int, day: str, entry: CreateEntry, user=Depends(user.
         VALUES (:day_id, :exercise, :goal_reps, :goal_weight)
         RETURNING id
         """), {"day_id": day_id, "exercise": exercise_name, "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight}).scalar_one()
+      explain5 = connection.execute(sqlalchemy.text("""
+        EXPLAIN ANALYZE
+        INSERT INTO entry (day_id, exercise, goal_reps, goal_weight)
+        VALUES (:day_id, :exercise, :goal_reps, :goal_weight)
+        RETURNING id
+        """), {"day_id": day_id, "exercise": exercise_name, "goal_reps": entry.goal_reps, "goal_weight": entry.goal_weight}).fetchall()
+      for row in explain5:
+        print(row)
     except NoResultFound:
       exercises = connection.execute(sqlalchemy.text("""
           SELECT name
@@ -100,11 +137,23 @@ def delete_entry(entry_id: int, user=Depends(user.get_user)):
           JOIN entry ON entry.day_id = day.id
           WHERE entry.id = :entry_id
           """), {"entry_id": entry_id}).scalar_one()
+      explain = connection.execute(sqlalchemy.text("""
+          EXPLAIN ANALYZE
+          SELECT diary.owner
+          FROM diary
+          JOIN day ON day.diary_id = diary.id
+          JOIN entry ON entry.day_id = day.id
+          WHERE entry.id = :entry_id
+          """), {"entry_id": entry_id}).fetchall()
+      for row in explain:
+        print(row)
     except NoResultFound:
       raise HTTPException(status_code=404, detail="An entry with this id does not exist.")
     if owner != user:
       raise HTTPException(status_code=401, detail="You did not create this entry.")
-    connection.execute(sqlalchemy.text("DELETE FROM entry WHERE id = :entry_id"), {"entry_id": entry_id})
+    explain2 = connection.execute(sqlalchemy.text("EXPLAIN ANALYZE DELETE FROM entry WHERE id = :entry_id"), {"entry_id": entry_id})
+    for row in explain2:
+      print(row)
   return f"Entry (id={entry_id}) successfully deleted."
 
 @router.patch("/{entry_id}")
@@ -119,6 +168,16 @@ def edit_entry(entry_id: int, edit_entry: EditEntry = Body(None, embed=True), us
           JOIN entry ON entry.day_id = day.id
           WHERE entry.id = :entry_id
           """), {"entry_id": entry_id}).scalar_one()
+      explain = connection.execute(sqlalchemy.text("""
+          EXPLAIN ANALYZE
+          SELECT diary.owner
+          FROM diary
+          JOIN day ON day.diary_id = diary.id
+          JOIN entry ON entry.day_id = day.id
+          WHERE entry.id = :entry_id
+          """), {"entry_id": entry_id}).fetchall()
+      for row in explain:
+        print(row)
     except NoResultFound:
       raise HTTPException(status_code=404, detail="An entry with this id does not exist.")
     if owner != user:
@@ -133,13 +192,24 @@ def edit_entry(entry_id: int, edit_entry: EditEntry = Body(None, embed=True), us
             FROM exercise
             WHERE name ILIKE :exercise
             """), {"exercise": filtered_entry['exercise']}).scalar_one()
+        explain2 = connection.execute(sqlalchemy.text("""
+            EXPLAIN ANALYZE
+            SELECT name
+            FROM exercise
+            WHERE name ILIKE :exercise
+            """), {"exercise": filtered_entry['exercise']}).fetchall()
+        for row in explain2:
+          print(row)
         filtered_entry['exercise'] = exercise_name
       set_clause = ", ".join([f"{key} = :{key}" for key, value in filtered_entry.items() if value is not None])
-      connection.execute(sqlalchemy.text(f"""
+      explain3 = connection.execute(sqlalchemy.text(f"""
+          EXPLAIN ANALYZE
           UPDATE entry
           SET {set_clause}
           WHERE id = :entry_id
           """), {"entry_id": entry_id, **filtered_entry})
+      for row in explain3:
+        print(row)
     except HTTPException:
       raise HTTPException(status_code=422, detail="At least one value must be edited.")
     except:
@@ -166,6 +236,16 @@ def get_diary_and_day_by_entry(entry_id: int, user=Depends(user.get_user)):
         JOIN entry ON entry.day_id = day.id
         WHERE entry.id = :entry_id
         """), {"entry_id": entry_id}).fetchone()
+    explain = connection.execute(sqlalchemy.text("""
+        EXPLAIN ANALYZE
+        SELECT diary.owner, diary.id, day.day_name
+        FROM diary
+        JOIN day ON day.diary_id = diary.id
+        JOIN entry ON entry.day_id = day.id
+        WHERE entry.id = :entry_id
+        """), {"entry_id": entry_id}).fetchall()
+    for row in explain:
+      print(row)
     if not diary:
       raise HTTPException(status_code=404, detail="An entry with this id does not exist.")
     if diary.owner != user:
