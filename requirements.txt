@@ -7,4 +7,4 @@ python-dotenv
 pre-commit
 supabase
 python-multipart
-enum
+enum34
